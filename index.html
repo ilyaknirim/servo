@@ -141,7 +141,7 @@
         </div>
         <div style="background: #f5f5f5; padding: 20px; border-radius: 12px;">
             <h4 style="margin-top: 0;">⚡ Питание</h4>
-            <p>Маленькие сервы (SG90, MG90S) работают от 5V, но при движении потребляют до 500 мА. Для одного серво — норм, для нескольких — нужно внешнее питание .</p>
+            <p>Маленькие сервы (SG90, MG90S) работают от 5V, но при движении потребляют до 500 мА. Для одного серво — нормально, для нескольких — нужно внешнее питание .</p>
         </div>
     </div>
     <div class="robot-arm" style="margin-top: 20px;">
@@ -166,19 +166,6 @@
     </div>
 </div>
 
-<!-- ============== ИНСТРУКЦИЯ ПО СОЗДАНИЮ СХЕМ ============== -->
-<h2>🛠️ КАК СОЗДАТЬ СХЕМЫ В CIRKIT DESIGNER</h2>
-<div class="exp">
-    <ol style="font-size: 1.1em;">
-        <li><strong>Зайдите на <a href="https://app.cirkitdesigner.com" target="_blank">app.cirkitdesigner.com</a></strong></li>
-        <li><strong>Нажмите "New Circuit"</strong></li>
-        <li><strong>Добавьте компоненты:</strong> Arduino Uno, сервопривод, потенциометры, кнопки</li>
-        <li><strong>Соедините провода</strong> по таблицам ниже</li>
-        <li><strong>Для нескольких сервоприводов</strong> — просто добавьте их и подключите к разным пинам</li>
-        <li><strong>Нажмите "Share" → "Copy embed link"</strong> — получите ссылку для вставки</li>
-    </ol>
-    <p>⏱️ На каждую схему 3–5 минут. Всего ~30 минут на проект.</p>
-</div>
 
 <!-- ============== ЭКСПЕРИМЕНТ 1 ============== -->
 <h2>📌 ЭКСПЕРИМЕНТ 1 · ОДИН СЕРВОПРИВОД (ПРОСТЫЕ ДВИЖЕНИЯ)</h2>
@@ -194,7 +181,6 @@
             <tr><td>Коричневый</td><td>GND</td></tr>
             <tr><td>Жёлтый</td><td>D9</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_01_basic.circuit</code></p>
     </div>
 
     <div class="code-block">
@@ -251,7 +237,6 @@ void loop() {
             <tr><th colspan="2">Сервопривод</th></tr>
             <tr><td>Сигнал</td><td>D9</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_02_potentiometer.circuit</code></p>
     </div>
 
     <div class="code-block">
@@ -305,7 +290,6 @@ void loop() {
             <tr><td colspan="2">Питание: оба красные → 5V, коричневые → GND</td></tr>
         </table>
         <p class="warning">⚠️ Для двух серво уже лучше внешнее питание!</p>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_03_two.circuit</code></p>
     </div>
 
     <div class="code-block">
@@ -369,7 +353,6 @@ void loop() {
             <tr><th>Серво 3 (предплечье)</th><td>D11</td></tr>
             <tr><td colspan="2">Питание: все красные → внешний 5V, GND → общий</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_04_three.circuit</code></p>
     </div>
 
     <div class="code-block">
@@ -455,7 +438,6 @@ void loop() {
             <tr><th>Кнопка</th><td>D2 (с подтяжкой к GND)</td></tr>
             <tr><td colspan="2">Внешнее питание 5V 3A обязательно!</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_05_four.circuit</code></p>
     </div>
 
     <div class="code-block">
@@ -818,9 +800,7 @@ void setAllAngles(int sr, int sl, int e, int wr, int wt, int t, int i) {
             </ul>
         </div>
     </div>
-    <div style="text-align: center; margin-top: 30px; background: rgba(52,152,219,0.15); padding: 20px; border-radius: 12px;">
-        <span style="font-size: 1.2em;">📁 Все схемы: servo_*.circuit в Cirkit Designer</span>
-    </div>
+    
 </div>
 
 </body>
