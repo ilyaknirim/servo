@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔄 Сервопривод: 7 экспериментов с движением</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: #f5f7fa;
+            color: #1e2b3c;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+            line-height: 1.6;
+        }
+        h1 {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 0 #1a252f;
+            font-weight: 500;
+            letter-spacing: 1px;
+            border-left: 12px solid #3498db;
+        }
+        h2 {
+            background: #34495e;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            margin-top: 45px;
+            font-weight: 400;
+            border-bottom: 4px solid #3498db;
+            display: inline-block;
+        }
+        h3 {
+            color: #2c3e50;
+            font-weight: 600;
+            border-left: 6px solid #3498db;
+            padding-left: 18px;
+            margin: 30px 0 20px;
+        }
+        .exp {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .scheme-box {
+            background: #e8f0fe;
+            border: 2px solid #3498db;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #2c3e50;
+            border-left: 8px solid #2980b9;
+        }
+        .code-block {
+            background: #0f1a24;
+            color: #e4f0fb;
+            padding: 22px;
+            border-radius: 14px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 15px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 25px 0;
+            border-left: 8px solid #3498db;
+        }
+        .fact {
+            background: #e8f0fe;
+            border-left: 8px solid #2980b9;
+            border-radius: 12px;
+            padding: 18px 25px;
+            margin: 20px 0;
+            font-size: 1.05em;
+        }
+        .warning {
+            background: #ffefed;
+            border-left: 8px solid #d32f2f;
+            border-radius: 12px;
+            padding: 18px 25px;
+        }
+        .pin-reference {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            background: #2c3e50;
+            color: white;
+            padding: 25px;
+            border-radius: 16px;
+            margin: 30px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+        }
+        td, th {
+            border: 1px solid #b2d8fa;
+            padding: 14px;
+            text-align: left;
+        }
+        th {
+            background: #2980b9;
+            color: white;
+        }
+        .robot-arm {
+            display: flex;
+            justify-content: space-around;
+            background: #2c3e50;
+            padding: 20px;
+            border-radius: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🔄 СЕРВОПРИВОД · 7 ЭКСПЕРИМЕНТОВ С ДВИЖЕНИЕМ</h1>
+
+<p style="font-size: 1.3em; background: white; padding: 20px; border-radius: 12px; border-left: 12px solid #3498db;">
+    Сервопривод — это мотор, который умеет поворачиваться на заданный угол (обычно 0–180°) и точно его держать. Внутри: электромотор, редуктор и плата управления с обратной связью .
+</p>
+
+<!-- ============== ТЕОРИЯ СЕРВОПРИВОДА ============== -->
+<h2>🔧 КАК РАБОТАЕТ СЕРВОПРИВОД</h2>
+<div class="exp">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div style="background: #f5f5f5; padding: 20px; border-radius: 12px;">
+            <h4 style="margin-top: 0;">📐 Угол поворота</h4>
+            <p>Стандартный сервопривод поворачивается на 180°. Управляется длительностью импульса: 0° = 0.5 мс, 90° = 1.5 мс, 180° = 2.5 мс .</p>
+        </div>
+        <div style="background: #f5f5f5; padding: 20px; border-radius: 12px;">
+            <h4 style="margin-top: 0;">⚡ Питание</h4>
+            <p>Маленькие сервы (SG90, MG90S) работают от 5V, но при движении потребляют до 500 мА. Для одного серво — норм, для нескольких — нужно внешнее питание .</p>
+        </div>
+    </div>
+    <div class="robot-arm" style="margin-top: 20px;">
+        <div>🦾 Плечо</div>
+        <div>🔄 Предплечье</div>
+        <div>✋ Запястье</div>
+        <div>🔧 Клешня</div>
+    </div>
+</div>
+
+<!-- ============== БАЗОВОЕ ПОДКЛЮЧЕНИЕ ============== -->
+<div class="pin-reference">
+    <div style="grid-column: 1/-1; margin-bottom: 15px; text-align: center;">
+        <span style="background: #3498db; color: white; padding: 12px 30px; border-radius: 40px; font-weight: 700; font-size: 1.2em;">🔌 ПОДКЛЮЧЕНИЕ СЕРВОПРИВОДА</span>
+    </div>
+    <div><span style="background: #d32f2f; color: white; padding: 5px 12px; border-radius: 20px;">Красный</span> → 5V (питание)</div>
+    <div><span style="background: #2e7d32; color: white; padding: 5px 12px; border-radius: 20px;">Коричневый/чёрный</span> → GND (земля)</div>
+    <div><span style="background: #f39c12; color: black; padding: 5px 12px; border-radius: 20px;">Жёлтый/оранжевый</span> → сигнальный пин (D9)</div>
+    
+    <div style="grid-column: 1/-1; margin-top: 20px; background: #1a252f; padding: 20px; border-radius: 12px;">
+        <strong>⚠️ ВАЖНО ПРО ПИТАНИЕ:</strong> Для 2–3 сервоприводов можно питать от Arduino. Для 4+ нужно внешнее питание (5V, 2–3А), иначе Ардуино сгорит. Общий GND обязательно соединить!
+    </div>
+</div>
+
+<!-- ============== ИНСТРУКЦИЯ ПО СОЗДАНИЮ СХЕМ ============== -->
+<h2>🛠️ КАК СОЗДАТЬ СХЕМЫ В CIRKIT DESIGNER</h2>
+<div class="exp">
+    <ol style="font-size: 1.1em;">
+        <li><strong>Зайдите на <a href="https://app.cirkitdesigner.com" target="_blank">app.cirkitdesigner.com</a></strong></li>
+        <li><strong>Нажмите "New Circuit"</strong></li>
+        <li><strong>Добавьте компоненты:</strong> Arduino Uno, сервопривод, потенциометры, кнопки</li>
+        <li><strong>Соедините провода</strong> по таблицам ниже</li>
+        <li><strong>Для нескольких сервоприводов</strong> — просто добавьте их и подключите к разным пинам</li>
+        <li><strong>Нажмите "Share" → "Copy embed link"</strong> — получите ссылку для вставки</li>
+    </ol>
+    <p>⏱️ На каждую схему 3–5 минут. Всего ~30 минут на проект.</p>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 1 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 1 · ОДИН СЕРВОПРИВОД (ПРОСТЫЕ ДВИЖЕНИЯ)</h2>
+<div class="exp">
+    <h3>Библиотека Servo · write() · Цикл от 0 до 180°</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 1:</strong> Один сервопривод<br>
+        Компоненты: Arduino Uno, сервопривод SG90<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>Сервопривод</th><th>Arduino</th></tr>
+            <tr><td>Красный</td><td>5V</td></tr>
+            <tr><td>Коричневый</td><td>GND</td></tr>
+            <tr><td>Жёлтый</td><td>D9</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_01_basic.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 1: Базовое движение сервопривода
+// Плавно поворачивается от 0 до 180° и обратно
+
+#include &lt;Servo.h&gt;
+
+Servo myServo;  // Создаём объект для управления сервоприводом
+
+int pos = 0;    // Переменная для хранения текущего угла
+
+void setup() {
+  myServo.attach(9);  // Подключаем серво к 9 пину
+}
+
+void loop() {
+  // Поворачиваемся от 0° до 180°
+  for (pos = 0; pos <= 180; pos++) {
+    myServo.write(pos);  // Устанавливаем угол
+    delay(15);            // Ждём, чтобы серво успело повернуться
+  }
+  
+  // Поворачиваемся обратно от 180° до 0°
+  for (pos = 180; pos >= 0; pos--) {
+    myServo.write(pos);
+    delay(15);
+  }
+}
+    </div>
+
+    <div class="fact">
+        🔬 <strong>ФАКТ О БИБЛИОТЕКЕ:</strong> Библиотека Servo автоматически генерирует импульсы нужной длительности. Для угла 0° — импульс 0.5 мс, для 180° — 2.5 мс . На пинах 9 и 10 при использовании серво нельзя использовать analogWrite() — они используют один таймер.
+    </div>
+    
+    <div class="fact">
+        🕒 <strong>ПОЧЕМУ DELAY 15 МС?</strong> Сервопривод не мгновенно поворачивается — ему нужно время (~0.1–0.2 с на 60°). delay(15) на каждый градус даёт ~2.7 секунды на полный цикл. Можно увеличить скорость, уменьшив задержку.
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 2 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 2 · УПРАВЛЕНИЕ ПОТЕНЦИОМЕТРОМ</h2>
+<div class="exp">
+    <h3>map() · Угол = положение ручки</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 2:</strong> Сервопривод + потенциометр<br>
+        Компоненты: Arduino Uno, сервопривод, потенциометр 10 кОм<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>Потенциометр</th><th>Arduino</th></tr>
+            <tr><td>Левый</td><td>5V</td></tr>
+            <tr><td>Правый</td><td>GND</td></tr>
+            <tr><td>Средний</td><td>A0</td></tr>
+            <tr><th colspan="2">Сервопривод</th></tr>
+            <tr><td>Сигнал</td><td>D9</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_02_potentiometer.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 2: Управление сервоприводом потенциометром
+// Крутим ручку — серво поворачивается
+
+#include &lt;Servo.h&gt;
+
+Servo myServo;
+
+#define POT_PIN A0
+
+void setup() {
+  myServo.attach(9);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int potValue = analogRead(POT_PIN);        // 0..1023
+  
+  // Преобразуем 0..1023 в 0..180
+  int angle = map(potValue, 0, 1023, 0, 180);
+  
+  myServo.write(angle);
+  
+  Serial.print("Потенциометр: ");
+  Serial.print(potValue);
+  Serial.print(" → Угол: ");
+  Serial.println(angle);
+  
+  delay(50);  // Небольшая пауза
+}
+    </div>
+
+    <div class="fact">
+        🎛️ <strong>ТОЧНОЕ ПОЗИЦИОНИРОВАНИЕ:</strong> Так управляются промышленные манипуляторы — оператор крутит ручки, робот повторяет движения. В реальных системах используют не потенциометры, а энкодеры (цифровые датчики угла).
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 3 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 3 · ДВА СЕРВОПРИВОДА (ПРОСТЕЙШАЯ РУКА)</h2>
+<div class="exp">
+    <h3>Два независимых движения · Основа роборуки</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 3:</strong> Два сервопривода<br>
+        Компоненты: Arduino Uno, 2 сервопривода<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>Серво 1</th><th>D9</th></tr>
+            <tr><th>Серво 2</th><th>D10</th></tr>
+            <tr><td colspan="2">Питание: оба красные → 5V, коричневые → GND</td></tr>
+        </table>
+        <p class="warning">⚠️ Для двух серво уже лучше внешнее питание!</p>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_03_two.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 3: Два сервопривода
+// Один поворачивается влево-вправо (основание)
+// Второй — вверх-вниз (плечо)
+
+#include &lt;Servo.h&gt;
+
+Servo baseServo;    // Серво основания
+Servo armServo;     // Серво плеча
+
+void setup() {
+  baseServo.attach(9);
+  armServo.attach(10);
+}
+
+void loop() {
+  // Основание поворачивается
+  for (int angle = 0; angle <= 180; angle++) {
+    baseServo.write(angle);
+    delay(10);
+  }
+  
+  // Плечо поднимается
+  for (int angle = 0; angle <= 180; angle++) {
+    armServo.write(angle);
+    delay(10);
+  }
+  
+  // Основание возвращается
+  for (int angle = 180; angle >= 0; angle--) {
+    baseServo.write(angle);
+    delay(10);
+  }
+  
+  // Плечо опускается
+  for (int angle = 180; angle >= 0; angle--) {
+    armServo.write(angle);
+    delay(10);
+  }
+}
+    </div>
+
+    <div class="fact">
+        🤖 <strong>РОБОТЕХНИКА:</strong> Два сервопривода — это уже полноценная SCARA-рука (Selective Compliance Assembly Robot Arm). Один отвечает за поворот (основание), второй — за подъём (плечо). Третий серво — предплечье, четвёртый — запястье.
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 4 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 4 · ТРИ СЕРВОПРИВОДА (МАНИПУЛЯТОР)</h2>
+<div class="exp">
+    <h3>Основание + плечо + предплечье</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 4:</strong> Три сервопривода<br>
+        Компоненты: Arduino Uno, 3 сервопривода, внешнее питание 5V 2A<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>Серво 1 (основание)</th><td>D9</td></tr>
+            <tr><th>Серво 2 (плечо)</th><td>D10</td></tr>
+            <tr><th>Серво 3 (предплечье)</th><td>D11</td></tr>
+            <tr><td colspan="2">Питание: все красные → внешний 5V, GND → общий</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_04_three.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 4: Три сервопривода (манипулятор)
+// Движения по заданной траектории
+
+#include &lt;Servo.h&gt;
+
+Servo baseServo;    // Основание (поворот)
+Servo shoulderServo; // Плечо (вверх-вниз)
+Servo elbowServo;   // Предплечье
+
+int basePos = 90;
+int shoulderPos = 90;
+int elbowPos = 90;
+
+void setup() {
+  baseServo.attach(9);
+  shoulderServo.attach(10);
+  elbowServo.attach(11);
+  
+  // Начальное положение
+  baseServo.write(basePos);
+  shoulderServo.write(shoulderPos);
+  elbowServo.write(elbowPos);
+  delay(1000);
+}
+
+void loop() {
+  // Движение 1: поворот основания
+  for (basePos = 90; basePos <= 180; basePos++) {
+    baseServo.write(basePos);
+    delay(10);
+  }
+  
+  // Движение 2: подъём плеча
+  for (shoulderPos = 90; shoulderPos <= 150; shoulderPos++) {
+    shoulderServo.write(shoulderPos);
+    delay(10);
+  }
+  
+  // Движение 3: сгибание предплечья
+  for (elbowPos = 90; elbowPos <= 120; elbowPos++) {
+    elbowServo.write(elbowPos);
+    delay(10);
+  }
+  
+  delay(1000);
+  
+  // Возврат в исходное
+  for (elbowPos = 120; elbowPos >= 90; elbowPos--) {
+    elbowServo.write(elbowPos);
+    delay(10);
+  }
+  for (shoulderPos = 150; shoulderPos >= 90; shoulderPos--) {
+    shoulderServo.write(shoulderPos);
+    delay(10);
+  }
+  for (basePos = 180; basePos >= 90; basePos--) {
+    baseServo.write(basePos);
+    delay(10);
+  }
+  
+  delay(1000);
+}
+    </div>
+
+    <div class="fact">
+        🦾 <strong>КИНЕМАТИКА:</strong> В реальных роботах положение схвата вычисляется с помощью прямой и обратной кинематики. Для трёх звеньев это уже довольно сложная математика (матрицы поворота, углы Эйлера). Но принцип тот же — координация нескольких моторов.
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 5 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 5 · ЧЕТЫРЕ СЕРВОПРИВОДА (ПОЛНАЯ РУКА)</h2>
+<div class="exp">
+    <h3>Основание + плечо + предплечье + запястье</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 5:</strong> Четыре сервопривода + кнопка записи<br>
+        Компоненты: Arduino Uno, 4 серво, кнопка, резистор 10 кОм<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>Серво 1-4</th><td>D9, D10, D11, D6</td></tr>
+            <tr><th>Кнопка</th><td>D2 (с подтяжкой к GND)</td></tr>
+            <tr><td colspan="2">Внешнее питание 5V 3A обязательно!</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>servo_05_four.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 5: Полноценная рука с запястьем
+// Кнопка записывает последовательность движений
+
+#include &lt;Servo.h&gt;
+
+Servo servos[4];  // Массив сервоприводов
+int pins[4] = {9, 10, 11, 6};
+
+#define BUTTON 2
+
+// Массив для записи до 100 позиций
+int positions[100][4];
+int stepCount = 0;
+bool recording = false;
+
+void setup() {
+  for (int i = 0; i < 4; i++) {
+    servos[i].attach(pins[i]);
+    servos[i].write(90);
+  }
+  
+  pinMode(BUTTON, INPUT);
+  Serial.begin(9600);
+  Serial.println("Нажмите кнопку для записи");
+}
+
+void loop() {
+  // Проверяем кнопку
+  if (digitalRead(BUTTON) == HIGH) {
+    delay(300);  // Антидребезг
+    
+    if (!recording) {
+      // Начинаем запись
+      recording = true;
+      stepCount = 0;
+      Serial.println("Запись...");
+    } else {
+      // Заканчиваем запись и воспроизводим
+      recording = false;
+      Serial.println("Воспроизведение...");
+      playRecording();
+      Serial.println("Готово. Нажмите кнопку для новой записи");
+    }
+  }
+  
+  if (recording && stepCount < 100) {
+    // Записываем текущие позиции
+    for (int i = 0; i < 4; i++) {
+      positions[stepCount][i] = servos[i].read();
+    }
+    stepCount++;
+    delay(50);
+  }
+}
+
+void playRecording() {
+  for (int step = 0; step < stepCount; step++) {
+    for (int i = 0; i < 4; i++) {
+      servos[i].write(positions[step][i]);
+    }
+    delay(50);
+  }
+}
+    </div>
+
+    <div class="fact">
+        🎥 <strong>ОБУЧЕНИЕ РОБОТА:</strong> Этот метод называется "playback" или "обучение показом". Оператор вручную двигает руку (через потенциометры или просто руками), робот запоминает траекторию и повторяет. Так учат промышленных роботов на заводах .
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 6 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 6 · ПЯТЬ СЕРВОПРИВОДОВ (С ХВАТАТЕЛЕМ)</h2>
+<div class="exp">
+    <h3>Рука + клешня · Сервопривод как захват</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 6:</strong> 5 сервоприводов (4 на руку + 1 на клешню)<br>
+        <p>💾 Сохраните как: <code>servo_06_gripper.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 6: Рука с клешнёй
+// Сервоприводы: основание, плечо, предплечье, запястье, клешня
+
+#include &lt;Servo.h&gt;
+
+Servo base;      // D9
+Servo shoulder;  // D10
+Servo elbow;     // D11
+Servo wrist;     // D6
+Servo gripper;   // D5
+
+void setup() {
+  base.attach(9);
+  shoulder.attach(10);
+  elbow.attach(11);
+  wrist.attach(6);
+  gripper.attach(5);
+  
+  // Начальное положение
+  base.write(90);
+  shoulder.write(90);
+  elbow.write(90);
+  wrist.write(90);
+  gripper.write(30);  // Клешня открыта
+  delay(1000);
+}
+
+void loop() {
+  // Тянемся к объекту
+  base.write(120);
+  shoulder.write(60);
+  elbow.write(120);
+  delay(1000);
+  
+  // Закрываем клешню (хватаем)
+  gripper.write(80);
+  delay(500);
+  
+  // Поднимаем и поворачиваем
+  shoulder.write(30);
+  base.write(30);
+  delay(1000);
+  
+  // Открываем клешню (кладём)
+  gripper.write(30);
+  delay(500);
+  
+  // Возврат в исходное
+  base.write(90);
+  shoulder.write(90);
+  elbow.write(90);
+  wrist.write(90);
+  delay(1000);
+}
+    </div>
+
+    <div class="fact">
+        ✋ <strong>ТИПЫ ЗАХВАТОВ:</strong> В промышленности используют пневматические (сильнее, быстрее), вакуумные (для плоских предметов) и магнитные (для металлов). Сервоприводные клешни — самые простые, но требуют точного управления усилием (чтобы не раздавить объект).
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 7 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 7 · СЕМЬ СЕРВОПРИВОДОВ (ГУМАНОИДНАЯ РУКА)</h2>
+<div class="exp">
+    <h3>Полная копия человеческой руки (7 степеней свободы)</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 7:</strong> 7 сервоприводов — полная аниматронная рука<br>
+        <p>💾 Сохраните как: <code>servo_07_full_arm.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 7: Гуманоидная рука (7 DOF)
+// Плечевой сустав: 2 серво (поворот/подъём)
+// Локтевой сустав: 1 серво
+// Запястье: 2 серво (поворот/наклон)
+// Клешня: 2 серво (пальцы)
+
+#include &lt;Servo.h&gt;
+
+// Плечо
+Servo shoulderRot;   // D9  (поворот)
+Servo shoulderLift;  // D10 (подъём)
+
+// Локоть
+Servo elbow;         // D11
+
+// Запястье
+Servo wristRot;      // D6  (поворот)
+Servo wristTilt;     // D5  (наклон)
+
+// Пальцы
+Servo thumb;         // D3
+Servo indexFinger;   // D4
+
+int angles[7];  // Текущие углы
+
+void setup() {
+  shoulderRot.attach(9);
+  shoulderLift.attach(10);
+  elbow.attach(11);
+  wristRot.attach(6);
+  wristTilt.attach(5);
+  thumb.attach(3);
+  indexFinger.attach(4);
+  
+  // Начальное положение (рука вытянута)
+  setAllAngles(90, 90, 90, 90, 90, 30, 30);
+  delay(1000);
+}
+
+void loop() {
+  // Движение 1: рука вверх
+  setAllAngles(90, 30, 150, 90, 90, 30, 30);
+  delay(1000);
+  
+  // Движение 2: рука в сторону
+  setAllAngles(150, 90, 90, 90, 90, 30, 30);
+  delay(1000);
+  
+  // Движение 3: поворот запястья
+  setAllAngles(90, 90, 90, 30, 150, 30, 30);
+  delay(1000);
+  
+  // Движение 4: взять предмет
+  setAllAngles(120, 60, 120, 90, 90, 80, 80);  // Пальцы сжаты
+  delay(1500);
+  
+  // Движение 5: положить предмет
+  setAllAngles(60, 30, 150, 90, 90, 80, 80);
+  delay(1000);
+  setAllAngles(60, 30, 150, 90, 90, 30, 30);  // Пальцы разжаты
+  delay(500);
+  
+  // Возврат в исходное
+  setAllAngles(90, 90, 90, 90, 90, 30, 30);
+  delay(1000);
+}
+
+void setAllAngles(int sr, int sl, int e, int wr, int wt, int t, int i) {
+  shoulderRot.write(sr);
+  shoulderLift.write(sl);
+  elbow.write(e);
+  wristRot.write(wr);
+  wristTilt.write(wt);
+  thumb.write(t);
+  indexFinger.write(i);
+  delay(500);  // Ждём, пока рука примет положение
+}
+    </div>
+
+    <div class="fact">
+        🦾 <strong>7 СТЕПЕНЕЙ СВОБОДЫ:</strong> Человеческая рука имеет 27 степеней свободы! Но для большинства задач достаточно 7: 3 в плече, 1 в локте, 3 в запястье . Такая рука может выполнять сложные манипуляции — например, собирать мелкие детали.
+    </div>
+    
+    <div class="fact">
+        🤖 <strong>ПРОМЫШЛЕННЫЕ РОБОТЫ:</strong> KUKA, FANUC, ABB используют именно такую кинематику. Их точность — сотые доли миллиметра, грузоподъёмность — до тонны. Стоимость — от 20 000 до 500 000 евро . Наш сервоприводный вариант — идеальный учебный прототип.
+    </div>
+</div>
+
+<!-- ============== ТАБЛИЦА ПОДКЛЮЧЕНИЙ ============== -->
+<h2>📋 ТАБЛИЦА ПОДКЛЮЧЕНИЙ (ОТ 1 ДО 7 СЕРВО)</h2>
+<div class="exp">
+    <table>
+        <tr><th>Кол-во серво</th><th>Пины</th><th>Питание</th><th>Применение</th></tr>
+        <tr><td>1</td><td>D9</td><td>От Arduino</td><td>Поворотная платформа</td></tr>
+        <tr><td>2</td><td>D9, D10</td><td>От Arduino</td><td>Простейшая рука</td></tr>
+        <tr><td>3</td><td>D9, D10, D11</td><td>Внешнее 5V 2A</td><td>Манипулятор</td></tr>
+        <tr><td>4</td><td>D9, D10, D11, D6</td><td>Внешнее 5V 3A</td><td>Рука с запястьем</td></tr>
+        <tr><td>5</td><td>D9, D10, D11, D6, D5</td><td>Внешнее 5V 3A</td><td>Рука + клешня</td></tr>
+        <tr><td>6</td><td>D9-D11, D6, D5, D3</td><td>Внешнее 5V 5A</td><td>Аниматронная рука</td></tr>
+        <tr><td>7</td><td>D9-D11, D6, D5, D3, D4</td><td>Внешнее 5V 5A+</td><td>Гуманоидная рука</td></tr>
+    </table>
+    <p style="margin-top: 20px;"><strong>Общий GND с Arduino обязателен!</strong> Минус внешнего блока питания соединить с GND Arduino.</p>
+</div>
+
+<!-- ============== СПИСОК ФАЙЛОВ СХЕМ ============== -->
+<h2>📁 ФАЙЛЫ СХЕМ ДЛЯ CIRKIT DESIGNER</h2>
+<div class="exp">
+    <table>
+        <tr><th>Эксперимент</th><th>Имя файла</th><th>Компоненты</th></tr>
+        <tr><td>1. Один серво</td><td><code>servo_01_basic.circuit</code></td><td>Arduino + 1 серво</td></tr>
+        <tr><td>2. С потенциометром</td><td><code>servo_02_potentiometer.circuit</code></td><td>Arduino + серво + потенциометр</td></tr>
+        <tr><td>3. Два серво</td><td><code>servo_03_two.circuit</code></td><td>Arduino + 2 серво</td></tr>
+        <tr><td>4. Три серво</td><td><code>servo_04_three.circuit</code></td><td>Arduino + 3 серво + внешнее питание</td></tr>
+        <tr><td>5. Четыре серво</td><td><code>servo_05_four.circuit</code></td><td>Arduino + 4 серво + кнопка</td></tr>
+        <tr><td>6. Пять серво (с клешнёй)</td><td><code>servo_06_gripper.circuit</code></td><td>Arduino + 5 серво</td></tr>
+        <tr><td>7. Семь серво (полная рука)</td><td><code>servo_07_full_arm.circuit</code></td><td>Arduino + 7 серво + внешнее питание</td></tr>
+    </table>
+</div>
+
+<!-- ============== РЕАЛЬНЫЕ ПРИМЕНЕНИЯ ============== -->
+<h2>🏭 ГДЕ ИСПОЛЬЗУЮТ СЕРВОПРИВОДЫ</h2>
+<div class="exp">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div style="background: white; border-left: 6px solid #2980b9; padding: 18px; border-radius: 8px;">
+            <strong>🦾 Промышленные роботы</strong><br>
+            Сварка, покраска, сборка, паллетирование — везде нужны точные движения.
+        </div>
+        <div style="background: white; border-left: 6px solid #2980b9; padding: 18px; border-radius: 8px;">
+            <strong>🦿 Экзоскелеты</strong><br>
+            Помогают парализованным людям ходить, усиливают возможности человека.
+        </div>
+        <div style="background: white; border-left: 6px solid #2980b9; padding: 18px; border-radius: 8px;">
+            <strong>✈️ Беспилотники</strong><br>
+            Поворот камеры (гимбал), управление рулями (в больших дронах).
+        </div>
+        <div style="background: white; border-left: 6px solid #2980b9; padding: 18px; border-radius: 8px;">
+            <strong>🎮 Игровые симуляторы</strong><br>
+            Кресла с подвижными платформами (6 сервоприводов — 6 степеней свободы).
+        </div>
+        <div style="background: white; border-left: 6px solid #2980b9; padding: 18px; border-radius: 8px;">
+            <strong>📸 PTZ-камеры</strong><br>
+            Поворот, наклон, зум — два серво управляют камерой.
+        </div>
+        <div style="background: white; border-left: 6px solid #2980b9; padding: 18px; border-radius: 8px;">
+            <strong>🦾 Аниматроника</strong><br>
+            Движущиеся роботы в парках развлечений, кино.
+        </div>
+    </div>
+</div>
+
+<!-- ============== ИНЖЕНЕРНЫЕ ЗАДАЧИ ============== -->
+<h2>📌 ЗАДАЧИ ДЛЯ САМОСТОЯТЕЛЬНОЙ РАБОТЫ</h2>
+<div class="exp">
+    <div style="background: #f5f5f5; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+        <strong style="font-size: 1.2em;">🔹 Уровень 1 (базовый)</strong>
+        <ul style="margin-top: 12px;">
+            <li>Изменить скорость движения серво (менять delay)</li>
+            <li>Сделать плавные покачивания (синусоида: 90 + 30*sin(time))</li>
+            <li>Добавить второй потенциометр для двух серво</li>
+        </ul>
+    </div>
+    
+    <div style="background: #e8f0fe; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+        <strong style="font-size: 1.2em;">🔸 Уровень 2 (средний)</strong>
+        <ul style="margin-top: 12px;">
+            <li>Реализовать обратную кинематику для двух серво (позиция схвата в XY-координатах)</li>
+            <li>Сделать пульт управления с джойстиком для 4 серво</li>
+            <li>Запись и воспроизведение нескольких траекторий (EEPROM)</li>
+        </ul>
+    </div>
+    
+    <div style="background: #d4edda; padding: 20px; border-radius: 12px;">
+        <strong style="font-size: 1.2em;">🔹 Уровень 3 (продвинутый)</strong>
+        <ul style="margin-top: 12px;">
+            <li>Управление серво через Bluetooth с телефона (MIT App Inventor)</li>
+            <li>Синхронизация двух рук (7+7 серво) для совместной работы</li>
+            <li>Компенсация нагрузки (поддержание угла при внешнем воздействии)</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ============== ЗАКЛЮЧЕНИЕ ============== -->
+<div style="background: linear-gradient(145deg, #2c3e50, #1a252f); color: white; padding: 40px; border-radius: 16px; margin-top: 50px;">
+    <h2 style="background: none; color: #3498db; border: none; padding: 0; margin-top: 0; display: block;">📌 ВЫВОДЫ</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <div>
+            <p style="font-size: 1.2em; margin-bottom: 20px;">Что вы изучили:</p>
+            <ul style="list-style-type: none; padding-left: 0;">
+                <li style="margin-bottom: 12px;">✓ Библиотека Servo и метод write()</li>
+                <li style="margin-bottom: 12px;">✓ Управление от 1 до 7 сервоприводами</li>
+                <li style="margin-bottom: 12px;">✓ Потенциометры для ручного управления</li>
+                <li style="margin-bottom: 12px;">✓ Запись и воспроизведение движений</li>
+                <li style="margin-bottom: 12px;">✓ Кинематика роборуки</li>
+                <li style="margin-bottom: 12px;">✓ Организация внешнего питания</li>
+            </ul>
+        </div>
+        <div>
+            <p style="font-size: 1.2em; margin-bottom: 20px;">Дальнейшие темы:</p>
+            <ul style="list-style-type: none; padding-left: 0;">
+                <li style="margin-bottom: 12px;">➡ Обратная связь по положению (энкодеры)</li>
+                <li style="margin-bottom: 12px;">➡ Управление моментом (динамика)</li>
+                <li style="margin-bottom: 12px;">➡ Параллельная кинематика (Hexapod)</li>
+                <li style="margin-bottom: 12px;">➡ Машинное зрение + серво (слежение)</li>
+            </ul>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 30px; background: rgba(52,152,219,0.15); padding: 20px; border-radius: 12px;">
+        <span style="font-size: 1.2em;">📁 Все схемы: servo_*.circuit в Cirkit Designer</span>
+    </div>
+</div>
+
+</body>
+</html>
